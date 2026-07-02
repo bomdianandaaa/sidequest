@@ -712,14 +712,14 @@ async function saveApproved(list) {
   } catch(e) {}
 }
 
-function loadState() {
+async function loadState() {
   try {
     const saved = localStorage.getItem('sidequest_state_v2');
     if (saved) state = { ...state, ...JSON.parse(saved) };
   } catch(e) {}
   checkDayReset();
   if (!Object.keys(state.dailyQuests).length) {
-    generateAllCategories();
+    await generateAllCategories();
   } else {
     render();
   }
