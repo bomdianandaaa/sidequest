@@ -672,24 +672,44 @@ const STORAGE_APPROVED = 'sq_suggestions_approved';
 
 async function loadSharedBank() {
   try {
-    const r = await window.storage.get(STORAGE_APPROVED, true);
-    return r ? JSON.parse(r.value) : [];
+    if (window.storage) {
+      const r = await window.storage.get(STORAGE_APPROVED, true);
+      return r ? JSON.parse(r.value) : [];
+    }
+    const local = localStorage.getItem(STORAGE_APPROVED);
+    return local ? JSON.parse(local) : [];
   } catch(e) { return []; }
 }
 
 async function loadPending() {
   try {
-    const r = await window.storage.get(STORAGE_PENDING, true);
-    return r ? JSON.parse(r.value) : [];
+    if (window.storage) {
+      const r = await window.storage.get(STORAGE_PENDING, true);
+      return r ? JSON.parse(r.value) : [];
+    }
+    const local = localStorage.getItem(STORAGE_PENDING);
+    return local ? JSON.parse(local) : [];
   } catch(e) { return []; }
 }
 
 async function savePending(list) {
-  try { await window.storage.set(STORAGE_PENDING, JSON.stringify(list), true); } catch(e) {}
+  try {
+    if (window.storage) {
+      await window.storage.set(STORAGE_PENDING, JSON.stringify(list), true);
+    } else {
+      localStorage.setItem(STORAGE_PENDING, JSON.stringify(list));
+    }
+  } catch(e) {}
 }
 
 async function saveApproved(list) {
-  try { await window.storage.set(STORAGE_APPROVED, JSON.stringify(list), true); } catch(e) {}
+  try {
+    if (window.storage) {
+      await window.storage.set(STORAGE_APPROVED, JSON.stringify(list), true);
+    } else {
+      localStorage.setItem(STORAGE_APPROVED, JSON.stringify(list));
+    }
+  } catch(e) {}
 }
 
 function loadState() {
