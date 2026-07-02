@@ -714,7 +714,7 @@ async function saveApproved(list) {
 
 async function loadState() {
   try {
-    const saved = localStorage.getItem('sidequest_state_v2');
+    const saved = localStorage.getItem('sidequest_state_v3');
     if (saved) state = { ...state, ...JSON.parse(saved) };
   } catch(e) {}
   checkDayReset();
@@ -726,7 +726,7 @@ async function loadState() {
 }
 
 function saveState() {
-  try { localStorage.setItem('sidequest_state_v2', JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem('sidequest_state_v3', JSON.stringify(state)); } catch(e) {}
 }
 
 function checkDayReset() {
@@ -854,7 +854,7 @@ let carouselIndex = { fitness: 0, social: 0, creative: 0, explore: 0, wellbeing:
 function renderCategories() {
   const area = document.getElementById('categories-area');
   area.innerHTML = CATEGORIES.map(c => {
-    const quests = state.dailyQuests[c.cat] || [];
+    const quests = Array.isArray(state.dailyQuests[c.cat]) ? state.dailyQuests[c.cat] : [];
     const completed = state.completedToday[c.cat] || [false, false, false];
     const idx = carouselIndex[c.cat] || 0;
     return `
