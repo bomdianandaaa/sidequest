@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Side Quest Life</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #15151f;
+    --surface2: #1c1c2e;
+    --border: #2a2a40;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --glow: rgba(124,58,237,0.3);
+    --yellow: #fbbf24;
+    --green: #10b981;
+    --red: #f43f5e;
+    --blue: #3b82f6;
+    --orange: #f97316;
+    --pink: #ec4899;
+    --text: #e2e1f0;
+    --muted: #6b6b8a;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .logo { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent2); }
+  .share-icon-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); padding: 8px 14px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: var(--font-body);
+  }
+
+  .player-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 16px; margin-bottom: 20px; position: relative; overflow: hidden;
+  }
+  .player-card::before {
+    content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px;
+    background: var(--glow); border-radius: 50%; filter: blur(40px);
+  }
+  .player-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .avatar {
+    width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .player-info { flex: 1; min-width: 0; }
+  .player-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+  .player-level { font-size: 12px; color: var(--accent2); font-weight: 500; margin-top: 2px; }
+  .xp-bar-wrap { background: var(--surface2); border-radius: 100px; height: 8px; overflow: hidden; margin-bottom: 4px; }
+  .xp-bar {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px; transition: width 0.8s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 0 8px var(--glow);
+  }
+  .xp-label { font-size: 11px; color: var(--muted); }
+
+  .badges-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .badge {
+    display: flex; align-items: center; gap: 4px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 100px; padding: 4px 10px;
+    font-size: 11px; color: var(--muted); transition: all 0.2s;
+  }
+  .badge.unlocked { color: var(--text); }
+  .badge.unlocked.fitness { color: var(--red); border-color: var(--red); }
+  .badge.unlocked.social { color: var(--blue); border-color: var(--blue); }
+  .badge.unlocked.creative { color: var(--pink); border-color: var(--pink); }
+  .badge.unlocked.explore { color: var(--green); border-color: var(--green); }
+  .badge.unlocked.wellbeing { color: var(--yellow); border-color: var(--yellow); }
+
+  .streak-bar {
+    display: flex; align-items: center; gap: 8px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;
+  }
+  .streak-icon { font-size: 20px; }
+  .streak-text { flex: 1; }
+  .streak-num { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--yellow); line-height: 1; }
+  .streak-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .category-block { margin-bottom: 22px; }
+  .category-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .category-title { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+  .category-emoji { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .cat-fitness-bg { background: rgba(244,63,94,0.15); }
+  .cat-social-bg { background: rgba(59,130,246,0.15); }
+  .cat-creative-bg { background: rgba(236,72,153,0.15); }
+  .cat-explore-bg { background: rgba(16,185,129,0.15); }
+  .cat-wellbeing-bg { background: rgba(251,191,36,0.15); }
+
+  .regen-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+    color: var(--muted); font-family: var(--font-body); font-size: 11px; font-weight: 500;
+    padding: 6px 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+  }
+  .regen-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .regen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .regen-btn.spinning .regen-ic { animation: spin 0.6s linear infinite; display: inline-block; }
+
+  /* CAROUSEL */
+  .quest-carousel { display: flex; align-items: center; gap: 8px; }
+  .carousel-arrow {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .carousel-arrow:hover { border-color: var(--accent); color: var(--accent2); }
+  .carousel-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+  .carousel-viewport { flex: 1; min-width: 0; overflow: hidden; }
+  .carousel-track {
+    display: flex;
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  }
+  .carousel-slide { flex: 0 0 100%; min-width: 0; }
+
+  .quest-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 13px; display: flex; gap: 12px; align-items: flex-start;
+    transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden;
+  }
+  .quest-card:hover { border-color: var(--accent); }
+  .quest-card.completed { opacity: 0.55; border-color: var(--green); cursor: default; }
+  .quest-card.completed::after {
+    content: '✓ feito'; position: absolute; top: 10px; right: 12px;
+    color: var(--green); font-size: 11px; font-weight: 700;
+  }
+
+  .quest-body { flex: 1; min-width: 0; }
+  .quest-title { font-weight: 600; font-size: 13.5px; line-height: 1.3; margin-bottom: 4px; }
+  .quest-desc { font-size: 12px; color: var(--muted); line-height: 1.4; margin-bottom: 8px; }
+  .quest-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .quest-xp {
+    font-size: 11px; font-weight: 600; color: var(--accent2);
+    background: rgba(124,58,237,0.15); padding: 2px 8px; border-radius: 100px;
+  }
+  .quest-diff { font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 500; }
+  .diff-easy { background: rgba(16,185,129,0.15); color: var(--green); }
+  .diff-medium { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .diff-hard { background: rgba(244,63,94,0.15); color: var(--red); }
+  .quest-camera-hint { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+  .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+  .carousel-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border);
+    transition: all 0.2s;
+  }
+  .carousel-dot.active { background: var(--accent2); width: 16px; border-radius: 100px; }
+  .carousel-dot.done { background: var(--green); }
+
+  .cat-loading {
+    text-align: center; padding: 24px; color: var(--muted); font-size: 13px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  }
+  .spinner {
+    width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--accent2);
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100;
+    align-items: flex-end; justify-content: center; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px 20px 0 0;
+    padding: 24px 20px 36px; width: 100%; max-width: 480px; animation: slideUp 0.3s ease;
+    max-height: 90vh; overflow-y: auto;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 100px; margin: 0 auto 20px; }
+  .modal-title { font-family: var(--font-display); font-weight: 800; font-size: 19px; margin-bottom: 4px; text-align: center; }
+  .modal-sub { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+  .photo-upload-zone {
+    border: 2px dashed var(--border); border-radius: 16px; padding: 32px 16px;
+    text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+  }
+  .photo-upload-zone:hover { border-color: var(--accent); background: rgba(124,58,237,0.05); }
+  .photo-upload-zone .upload-icon { font-size: 36px; margin-bottom: 8px; }
+  .photo-upload-zone .upload-text { font-size: 13px; color: var(--muted); }
+  .photo-upload-zone .upload-text strong { color: var(--accent2); }
+
+  .photo-preview-wrap { position: relative; margin-bottom: 16px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+  .photo-preview-wrap img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+  .photo-retake {
+    position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6);
+    border: none; border-radius: 100px; color: white; font-size: 12px; padding: 6px 12px;
+    cursor: pointer; font-family: var(--font-body);
+  }
+
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-btn {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+    color: var(--text); font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    padding: 13px; cursor: pointer; transition: all 0.2s;
+  }
+  .modal-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .modal-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: white; }
+  .modal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .share-card {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+    margin-bottom: 16px; font-size: 13px; line-height: 1.6; color: var(--text);
+    white-space: pre-wrap; font-family: var(--font-body);
+  }
+
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: white; border-radius: 100px; padding: 10px 20px;
+    font-size: 13px; font-weight: 600; z-index: 200; opacity: 0; pointer-events: none;
+    transition: all 0.3s; white-space: nowrap; max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; }
+
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface);
+    border-top: 1px solid var(--border); display: flex; justify-content: space-around;
+    padding: 10px 0 16px; z-index: 50;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px;
+    color: var(--muted); cursor: pointer; transition: color 0.2s; padding: 0 16px;
+    background: none; border: none; font-family: var(--font-body);
+  }
+  .nav-item.active { color: var(--accent2); }
+  .nav-icon { font-size: 20px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .history-day { margin-bottom: 20px; }
+  .history-date {
+    font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .history-quest {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px;
+  }
+  .history-icon { font-size: 16px; }
+  .history-name { flex: 1; }
+  .history-xp { color: var(--accent2); font-size: 12px; font-weight: 600; }
+
+  .profile-section { margin-bottom: 24px; }
+  .profile-section-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+  .stat-num { font-family: var(--font-display); font-weight: 800; font-size: 28px; color: var(--accent2); }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .badges-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .badge-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 10px; }
+  .badge-box.locked { opacity: 0.4; }
+  .badge-emoji { font-size: 24px; }
+  .badge-name { font-size: 13px; font-weight: 600; }
+  .badge-req { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .name-input {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: var(--font-body); font-size: 14px; padding: 10px 14px;
+    width: 100%; margin-bottom: 10px; outline: none; transition: border-color 0.2s;
+  }
+  .name-input:focus { border-color: var(--accent); }
+
+  .form-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-chip {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+    color: var(--muted); font-family: var(--font-body); font-size: 12px; padding: 6px 12px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .filter-chip.active { border-color: var(--accent2); color: var(--accent2); background: rgba(124,58,237,0.1); }
+
+  .main-btn {
+    width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 14px; color: white; font-family: var(--font-display);
+    font-weight: 700; font-size: 15px; padding: 14px; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 20px var(--glow);
+  }
+  .main-btn:hover { transform: translateY(-2px); }
+
+  .suggestion-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 13px; margin-bottom: 8px; position: relative;
+  }
+  .suggestion-card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .suggestion-card-desc { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .suggestion-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .suggestion-status {
+    font-size: 11px; padding: 2px 10px; border-radius: 100px; font-weight: 600;
+  }
+  .status-pending { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .status-approved { background: rgba(16,185,129,0.15); color: var(--green); }
+  .status-rejected { background: rgba(244,63,94,0.15); color: var(--red); }
+
+  .admin-btns { display: flex; gap: 6px; margin-top: 10px; }
+  .admin-btn {
+    flex: 1; border: none; border-radius: 10px; padding: 8px; font-size: 12px;
+    font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: all 0.2s;
+  }
+  .admin-btn.approve { background: rgba(16,185,129,0.15); color: var(--green); }
+  .admin-btn.approve:hover { background: var(--green); color: white; }
+  .admin-btn.reject { background: rgba(244,63,94,0.1); color: var(--red); }
+  .admin-btn.reject:hover { background: var(--red); color: white; }
+  .admin-btn.remove { background: rgba(244,63,94,0.1); color: var(--red); font-size: 11px; flex: 0 0 auto; padding: 8px 12px; }
+  .admin-btn.remove:hover { background: var(--red); color: white; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="page active" id="page-home">
+    <div class="header">
+      <div class="logo">Side<span>Quest</span></div>
+      <button class="share-icon-btn" onclick="openShare()">📤 Compartilhar</button>
+    </div>
+
+    <div class="player-card">
+      <div class="player-top">
+        <div class="avatar" id="player-avatar">🧙</div>
+        <div class="player-info">
+          <div class="player-name" id="player-name-display">Aventureiro</div>
+          <div class="player-level" id="player-level-display">⚔️ Nível 1 — Iniciante</div>
+        </div>
+      </div>
+      <div class="xp-bar-wrap"><div class="xp-bar" id="xp-bar" style="width: 0%"></div></div>
+      <div class="xp-label" id="xp-label">0 XP total</div>
+      <div class="badges-row" id="badges-row"></div>
+    </div>
+
+    <div class="streak-bar">
+      <div class="streak-icon">🔥</div>
+      <div class="streak-text">
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-sub">dias seguidos</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:right;">Missões hoje<br><span id="today-count" style="font-weight:700;color:var(--text);">0</span> / 15</div>
+    </div>
+
+    <div id="categories-area"></div>
+  </div>
+
+  <div class="page" id="page-history">
+    <div class="header"><div class="logo">Side<span>Quest</span></div></div>
+    <div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Histórico</div>
+    <div id="history-list">
+      <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">Complete missões para ver seu histórico aqui 🗂️</div>
+    </div>
+  </div>
+
+  <div class="page" id="page-profile">
+    <div class="header"><div class="logo">Side<span>Quest</span></div></div>
+    <div class="profile-section">
+      <div class="profile-section-title">Seu perfil</div>
+      <input class="name-input" id="name-input" placeholder="Como você quer ser chamado?" oninput="updateName(this.value)">
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">Estatísticas</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Missões completas</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-xp">0</div><div class="stat-label">XP total</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">Maior streak</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-level">1</div><div class="stat-label">Nível atual</div></div>
+      </div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">Conquistas</div>
+      <div class="badges-grid" id="badges-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="switchPage('home',this)" id="nav-home"><span class="nav-icon">⚔️</span>Missões</button>
+  <button class="nav-item" onclick="switchPage('history',this)" id="nav-history"><span class="nav-icon">📜</span>Histórico</button>
+  <button class="nav-item" onclick="switchPage('banco',this)" id="nav-banco"><span class="nav-icon">💡</span>Sugerir</button>
+  <button class="nav-item" onclick="switchPage('profile',this)" id="nav-profile"><span class="nav-icon">🧙</span>Perfil</button>
+</div>
+
+<div class="modal-overlay" id="photo-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="photo-modal-title">Prova da missão</div>
+    <div class="modal-sub" id="photo-modal-sub">Tire ou envie uma foto pra confirmar que você fez essa missão</div>
+
+    <div id="photo-upload-zone" class="photo-upload-zone" onclick="document.getElementById('photo-input').click()">
+      <div class="upload-icon">📸</div>
+      <div class="upload-text"><strong>Toque para tirar/enviar foto</strong><br>câmera ou galeria</div>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelect(event)">
+
+    <div id="photo-preview-wrap" style="display:none" class="photo-preview-wrap">
+      <img id="photo-preview-img" src="">
+      <button class="photo-retake" onclick="retakePhoto()">🔄 Trocar foto</button>
+    </div>
+
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closePhotoModal()">Cancelar</button>
+      <button class="modal-btn primary" id="confirm-quest-btn" onclick="confirmQuestCompletion()" disabled>✓ Confirmar missão</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-modal" onclick="closeShare(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📤 Compartilhar progresso</div>
+    <div class="share-card" id="share-text"></div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeShareModal()">Fechar</button>
+      <button class="modal-btn primary" onclick="copyShare()">📋 Copiar texto</button>
+    </div>
+  </div>
+</div>
+
+<!-- BANCO PAGE -->
+<div class="page" id="page-banco">
+  <div class="header"><div class="logo">Side<span>Quest</span></div><button class="share-icon-btn" onclick="openAdminLogin()">🔐 Admin</button></div>
+
+  <div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Sugerir missão</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Sua ideia vai pra fila de aprovação. Se aprovada, entra no banco e pode aparecer pra todo mundo!</div>
+
+  <div class="suggest-form">
+    <div class="form-label">Categoria</div>
+    <div class="filter-row" id="suggest-cats" style="margin-bottom:14px;">
+      <button class="filter-chip" onclick="setSuggestCat('fitness',this)">💪 Fitness</button>
+      <button class="filter-chip" onclick="setSuggestCat('social',this)">🤝 Social</button>
+      <button class="filter-chip" onclick="setSuggestCat('creative',this)">🎨 Criativo</button>
+      <button class="filter-chip" onclick="setSuggestCat('explore',this)">🗺️ Explorar</button>
+      <button class="filter-chip" onclick="setSuggestCat('wellbeing',this)">🌿 Bem-estar</button>
+    </div>
+
+    <div class="form-label">Dificuldade</div>
+    <div class="filter-row" id="suggest-diffs" style="margin-bottom:14px;">
+      <button class="filter-chip" onclick="setSuggestDiff('easy',this)">🟢 Fácil</button>
+      <button class="filter-chip" onclick="setSuggestDiff('medium',this)">🟡 Médio</button>
+      <button class="filter-chip" onclick="setSuggestDiff('hard',this)">🔴 Difícil</button>
+    </div>
+
+    <div class="form-label">Título da missão</div>
+    <input class="name-input" id="suggest-title" placeholder="Ex: Cozinhe algo que nunca fez antes" maxlength="80">
+
+    <div class="form-label">Descrição curta</div>
+    <input class="name-input" id="suggest-desc" placeholder="Ex: Pode dar errado. Faz parte." maxlength="120">
+
+    <div class="form-label">Emoji</div>
+    <input class="name-input" id="suggest-emoji" placeholder="🍳" maxlength="4" style="width:80px">
+
+    <button class="main-btn" onclick="submitSuggestion()" style="margin-top:8px">💡 Enviar sugestão</button>
+  </div>
+
+  <div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:24px 0 12px;">Minhas sugestões</div>
+  <div id="my-suggestions-list"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Você ainda não sugeriu nenhuma missão.</div></div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div class="page" id="page-admin">
+  <div class="header">
+    <div class="logo">Side<span>Quest</span> <span style="font-size:12px;color:var(--red);font-family:var(--font-body);">ADMIN</span></div>
+    <button class="share-icon-btn" onclick="adminLogout()">Sair</button>
+  </div>
+
+  <div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">⏳ Fila de aprovação</div>
+  <div id="admin-pending-list"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Nenhuma sugestão pendente. 🎉</div></div>
+
+  <div style="font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:24px 0 12px;">✅ Banco aprovado <span id="approved-count" style="color:var(--accent2)"></span></div>
+  <div id="admin-approved-list"></div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay" id="admin-modal" onclick="closeAdminModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔐 Acesso admin</div>
+    <div class="modal-sub">Senha do painel de aprovação</div>
+    <input class="name-input" id="admin-pass-input" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')tryAdminLogin()" style="margin-bottom:6px">
+    <div id="admin-pass-error" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;">Senha incorreta.</div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="document.getElementById('admin-modal').classList.remove('open')">Cancelar</button>
+      <button class="modal-btn primary" onclick="tryAdminLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = [
+  { cat: 'fitness', label: 'Fitness', emoji: '💪' },
+  { cat: 'social', label: 'Social', emoji: '🤝' },
+  { cat: 'creative', label: 'Criativo', emoji: '🎨' },
+  { cat: 'explore', label: 'Explorar', emoji: '🗺️' },
+  { cat: 'wellbeing', label: 'Bem-estar', emoji: '🌿' },
+];
+const DIFFS = ['easy', 'medium', 'hard'];
+const DIFF_XP = { easy: 20, medium: 35, hard: 55 };
+const DIFF_LABEL = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' };
+
+const LEVELS = [
+  { level: 1, name: 'Iniciante', avatar: '🧙' },
+  { level: 2, name: 'Explorador', avatar: '🧭' },
+  { level: 3, name: 'Aventureiro', avatar: '⚔️' },
+  { level: 4, name: 'Desbravador', avatar: '🦅' },
+  { level: 5, name: 'Lendário', avatar: '🌟' },
+  { level: 6, name: 'Mítico', avatar: '🔮' },
+];
+const LEVEL_THRESHOLDS = [0, 0, 150, 450, 1000, 2000, 3800];
+
+const BADGE_DEFS = [
+  { cat: 'fitness', emoji: '💪', name: 'Corpo em Movimento', threshold: 5 },
+  { cat: 'social', emoji: '🤝', name: 'Alma Conectada', threshold: 5 },
+  { cat: 'creative', emoji: '🎨', name: 'Mente Criativa', threshold: 5 },
+  { cat: 'explore', emoji: '🗺️', name: 'Espírito Livre', threshold: 5 },
+  { cat: 'wellbeing', emoji: '🌿', name: 'Bem Consigo', threshold: 5 },
+];
+
+const FIXED_BANK = {
+  fitness: {
+    easy: [
+      { title: 'Faça uma flexão a cada hora que lembrar', desc: 'Pode ser 1. Pode ser 10. Movimento é movimento.', emoji: '🏋️' },
+      { title: 'Alongue por 10 minutos', desc: 'No chão, em silêncio. Seu corpo agradece amanhã.', emoji: '🧘' },
+      { title: 'Suba e desça escada 5 vezes', desc: 'Esquece o elevador hoje. Suas pernas vão sentir.', emoji: '🪜' },
+      { title: 'Faça 20 polichinelos agora', desc: 'Sim, agora. Levanta e faz.', emoji: '⭐' },
+    ],
+    medium: [
+      { title: 'Treino de 15 minutos em casa', desc: 'Agachamento, abdominal, pular no lugar. Sem desculpa.', emoji: '🏃' },
+      { title: 'Plank por 1 minuto', desc: 'Parece pouco. Não é.', emoji: '⏱️' },
+      { title: 'Caminhada rápida de 25 minutos', desc: 'Ritmo de quem tem pressa, mesmo sem ter.', emoji: '🚶' },
+      { title: 'Sequência de 50 agachamentos no dia', desc: 'Divide como quiser. Termina o dia tendo feito.', emoji: '🦵' },
+    ],
+    hard: [
+      { title: 'Treino completo de 40 minutos', desc: 'Cardio + força. Suor de verdade.', emoji: '🔥' },
+      { title: 'Corra ou pedale 5km', desc: 'No seu ritmo, mas sem parar de vez.', emoji: '🏃‍♀️' },
+      { title: 'Experimente uma modalidade nova hoje', desc: 'Aula de dança, luta, escalada. Sai da zona.', emoji: '🥊' },
+    ],
+  },
+  social: {
+    easy: [
+      { title: 'Mande uma mensagem elogiando alguém', desc: 'Não "legal". Um elogio específico e honesto.', emoji: '💌' },
+      { title: 'Curta e comente algo de um amigo', desc: 'De verdade, não só o emoji de fogo.', emoji: '💬' },
+      { title: 'Pergunte como alguém realmente está', desc: 'E espera a resposta de verdade, sem sair correndo.', emoji: '🙋' },
+    ],
+    medium: [
+      { title: 'Ligue pra alguém que não fala há meses', desc: 'Sem motivo. Só porque sim.', emoji: '📞' },
+      { title: 'Marque um café ou conversa com alguém', desc: 'Pode ser pra essa semana. Manda o convite agora.', emoji: '☕' },
+      { title: 'Reconecte com um amigo de infância', desc: 'Manda um "lembrei de você hoje".', emoji: '🧸' },
+    ],
+    hard: [
+      { title: 'Converse com um estranho hoje', desc: 'Não assustador. Um "que dia bonito, né?" já conta.', emoji: '👋' },
+      { title: 'Organize um encontro com 3+ pessoas', desc: 'Você sendo a pessoa que junta a galera.', emoji: '🎉' },
+      { title: 'Tenha uma conversa difícil que vem adiando', desc: 'Aquela. Você sabe qual.', emoji: '🗣️' },
+    ],
+  },
+  creative: {
+    easy: [
+      { title: 'Desenhe alguma coisa, feio mesmo', desc: 'Feio é lindo se foi você que fez.', emoji: '✏️' },
+      { title: 'Tire uma foto artística de algo do seu dia', desc: 'Luz, sombra, ângulo estranho. Capricha.', emoji: '📷' },
+      { title: 'Escreva um poema de 4 linhas', desc: 'Sobre qualquer coisa. Pode rimar ou não.', emoji: '🖋️' },
+    ],
+    medium: [
+      { title: 'Aprenda 3 acordes novos ou um passo de dança', desc: 'Youtube tutorial vale. O ridículo faz parte.', emoji: '🎸' },
+      { title: 'Cozinhe um prato novo do zero', desc: 'Sem seguir receita à risca. Improvisa.', emoji: '👨‍🍳' },
+      { title: 'Monte um playlist temática nova', desc: 'Com tema específico. "Trilha sonora de segunda raivosa" vale.', emoji: '🎵' },
+    ],
+    hard: [
+      { title: 'Crie algo do início ao fim hoje', desc: 'Uma música, um desenho, um texto. Termina hoje.', emoji: '🎨' },
+      { title: 'Grave um vídeo curto fazendo algo que ama', desc: 'Não precisa postar. Só criar.', emoji: '🎬' },
+      { title: 'Escreva uma carta pra você do futuro', desc: 'Pode ser ridículo. Vai ser incrível reler em 1 ano.', emoji: '📮' },
+    ],
+  },
+  explore: {
+    easy: [
+      { title: 'Caminhe 20 min sem fone de ouvido', desc: 'Só você, a rua e os barulhos do bairro.', emoji: '🚶‍♀️' },
+      { title: 'Visite um parque ou área verde perto', desc: 'Só ficar sentado na grama já vale.', emoji: '🌳' },
+      { title: 'Descubra um restaurante novo perto de você', desc: 'Pesquise, anote o endereço, talvez até vá lá.', emoji: '🍜' },
+    ],
+    medium: [
+      { title: 'Vá a um lugar de transporte público', desc: 'Finge que é turista na sua própria cidade.', emoji: '🚌' },
+      { title: 'Explore um bairro que nunca foi', desc: 'Sem destino fixo. Só andar e ver.', emoji: '🧭' },
+      { title: 'Visite uma feira, mercado ou loja local nova', desc: 'Compre algo pequeno de alguém que não conhece.', emoji: '🛍️' },
+    ],
+    hard: [
+      { title: 'Faça um rolê sozinho(a) em um lugar novo', desc: 'Cinema, museu, trilha. Sem companhia, sem pressa.', emoji: '🗺️' },
+      { title: 'Planeje uma viagem de fim de semana', desc: 'Mesmo que não vá agora. Planeja de verdade.', emoji: '🧳' },
+      { title: 'Vá assistir/ver algo ao vivo que nunca viu', desc: 'Show, peça, evento esportivo. Experiência nova.', emoji: '🎭' },
+    ],
+  },
+  wellbeing: {
+    easy: [
+      { title: 'Escreva 3 coisas que estão indo bem', desc: 'Pode ser pequeno. Café bom conta.', emoji: '📝' },
+      { title: 'Beba 2L de água hoje', desc: 'Conta os copos se precisar.', emoji: '💧' },
+      { title: 'Fique 10 min sem celular, só respirando', desc: 'Sentado, deitado, onde for. Só você e o ar.', emoji: '🌬️' },
+    ],
+    medium: [
+      { title: 'Desligue telas 1h antes de dormir', desc: 'Modo ninja ativado. Livro, banho, conversa.', emoji: '🌙' },
+      { title: 'Durma antes da meia-noite', desc: 'Simples. Impossível. Mas você consegue.', emoji: '😴' },
+      { title: 'Faça algo gentil sem ninguém saber', desc: 'Modo anônimo ativado.', emoji: '🤍' },
+    ],
+    hard: [
+      { title: 'Faça um detox de redes sociais por 12h', desc: 'Avisa quem precisa, depois desaparece um pouco.', emoji: '📵' },
+      { title: 'Tenha uma sessão de reflexão de 30 min', desc: 'Sozinho, com caderno, sem distração.', emoji: '🪞' },
+      { title: 'Resolva algo que está te estressando há dias', desc: 'A tarefa adiada. Hoje ela sai da lista.', emoji: '✅' },
+    ],
+  },
+};
+
+let state = {
+  name: 'Aventureiro',
+  xp: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastPlayDate: null,
+  totalCompleted: 0,
+  totalXP: 0,
+  dailyQuests: {},
+  completedToday: {},
+  history: [],
+  badges: { fitness: 0, social: 0, creative: 0, explore: 0, wellbeing: 0 },
+  badgesUnlocked: { fitness: false, social: false, creative: false, explore: false, wellbeing: false }
+};
+
+let pendingQuest = null;
+let pendingPhotoDataUrl = null;
+let regenLocks = {};
+
+// Suggest & Admin
+const ADMIN_PASSWORD = 'sidequest2025';
+let isAdmin = false;
+let suggestCat = null;
+let suggestDiff = null;
+
+const STORAGE_PENDING = 'sq_suggestions_pending';
+const STORAGE_APPROVED = 'sq_suggestions_approved';
+
+async function loadSharedBank() {
+  try {
+    const r = await window.storage.get(STORAGE_APPROVED, true);
+    return r ? JSON.parse(r.value) : [];
+  } catch(e) { return []; }
+}
+
+async function loadPending() {
+  try {
+    const r = await window.storage.get(STORAGE_PENDING, true);
+    return r ? JSON.parse(r.value) : [];
+  } catch(e) { return []; }
+}
+
+async function savePending(list) {
+  try { await window.storage.set(STORAGE_PENDING, JSON.stringify(list), true); } catch(e) {}
+}
+
+async function saveApproved(list) {
+  try { await window.storage.set(STORAGE_APPROVED, JSON.stringify(list), true); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('sidequest_state_v2');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch(e) {}
+  checkDayReset();
+  if (!Object.keys(state.dailyQuests).length) {
+    generateAllCategories();
+  } else {
+    render();
+  }
+}
+
+function saveState() {
+  try { localStorage.setItem('sidequest_state_v2', JSON.stringify(state)); } catch(e) {}
+}
+
+function checkDayReset() {
+  const today = new Date().toDateString();
+  if (state.lastPlayDate && state.lastPlayDate !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (state.lastPlayDate !== yesterday.toDateString()) {
+      state.streak = 0;
+    }
+    state.dailyQuests = {};
+    state.completedToday = {};
+  }
+  state.lastPlayDate = today;
+  saveState();
+}
+
+async function getFixedTriplet(cat) {
+  const bank = FIXED_BANK[cat];
+  const approved = await loadSharedBank();
+  return DIFFS.map(diff => {
+    const hardcoded = bank[diff].map(q => ({ ...q, cat, diff, xp: DIFF_XP[diff] }));
+    const community = approved.filter(q => q.cat === cat && q.diff === diff)
+                              .map(q => ({ ...q, xp: DIFF_XP[diff] }));
+    const pool = [...hardcoded, ...community];
+    return pool[Math.floor(Math.random() * pool.length)];
+  });
+}
+
+async function generateAITriplet(cat) {
+  const catLabel = CATEGORIES.find(c => c.cat === cat).label;
+  const prompt = `Você gera "side quests" diárias para um RPG de vida real chamado SideQuest Life. Gere exatamente 3 missões da categoria "${catLabel}", uma de cada dificuldade: fácil, média e difícil.
+
+REGRAS:
+- Curtas, divertidas, leve humor, português brasileiro casual
+- Realizáveis no mesmo dia
+- Específicas e criativas, nunca genéricas
+- A missão deve resultar em algo que dá pra FOTOGRAFAR como prova (ex: foto do prato cozinhado, foto na rua caminhando, foto do desenho feito, print de algo)
+
+Responda SOMENTE com JSON válido, sem markdown, formato:
+[{"title":"...","desc":"...","diff":"easy","emoji":"..."},{"title":"...","desc":"...","diff":"medium","emoji":"..."},{"title":"...","desc":"...","diff":"hard","emoji":"..."}]`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await response.json();
+  const text = data.content.map(i => i.text || '').join('').trim();
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
+  return parsed.map(q => ({ ...q, cat, xp: DIFF_XP[q.diff] }));
+}
+
+async function generateCategoryQuests(cat) {
+  let triplet;
+  try {
+    triplet = await generateAITriplet(cat);
+  } catch(e) {
+    triplet = getFixedTriplet(cat);
+  }
+  state.dailyQuests[cat] = triplet;
+  state.completedToday[cat] = [false, false, false];
+  saveState();
+}
+
+async function generateAllCategories() {
+  renderSkeletons();
+  await Promise.all(CATEGORIES.map(c => generateCategoryQuests(c.cat)));
+  render();
+}
+
+async function regenerateCategory(cat) {
+  if (regenLocks[cat]) return;
+  regenLocks[cat] = true;
+  const btn = document.getElementById('regen-' + cat);
+  if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
+
+  const blockEl = document.getElementById('block-' + cat);
+  if (blockEl) blockEl.innerHTML = `
+    <div class="category-header">
+      <div class="category-title"><span class="category-emoji cat-${cat}-bg">${CATEGORIES.find(c=>c.cat===cat).emoji}</span>${CATEGORIES.find(c=>c.cat===cat).label}</div>
+    </div>
+    <div class="cat-loading"><div class="spinner"></div>Buscando novas missões...</div>`;
+
+  carouselIndex[cat] = 0;
+  await generateCategoryQuests(cat);
+  render();
+
+  regenLocks[cat] = false;
+}
+
+function renderSkeletons() {
+  const area = document.getElementById('categories-area');
+  area.innerHTML = CATEGORIES.map(c => `
+    <div class="category-block" id="block-${c.cat}">
+      <div class="category-header">
+        <div class="category-title"><span class="category-emoji cat-${c.cat}-bg">${c.emoji}</span>${c.label}</div>
+      </div>
+      <div class="cat-loading"><div class="spinner"></div>Gerando missões de ${c.label.toLowerCase()}...</div>
+    </div>
+  `).join('');
+}
+
+function render() {
+  renderPlayerCard();
+  renderBadgesRow();
+  renderCategories();
+  renderStats();
+  renderBadgesGrid();
+  renderHistory();
+  document.getElementById('player-name-display').textContent = state.name;
+  document.getElementById('name-input').value = state.name !== 'Aventureiro' ? state.name : '';
+  document.getElementById('streak-num').textContent = state.streak;
+
+  let doneCount = 0;
+  Object.values(state.completedToday).forEach(arr => arr.forEach(v => { if (v) doneCount++; }));
+  document.getElementById('today-count').textContent = doneCount;
+}
+
+function renderPlayerCard() {
+  const lvl = getCurrentLevel();
+  const nextLvl = getNextLevel();
+  const curThresh = LEVEL_THRESHOLDS[lvl.level];
+  const nextThresh = nextLvl ? LEVEL_THRESHOLDS[nextLvl.level] : curThresh + 1;
+  const pct = Math.min(100, Math.round(((state.xp - curThresh) / (nextThresh - curThresh)) * 100));
+
+  document.getElementById('player-avatar').textContent = lvl.avatar;
+  document.getElementById('player-level-display').textContent = `⚔️ Nível ${lvl.level} — ${lvl.name}`;
+  document.getElementById('xp-bar').style.width = pct + '%';
+  document.getElementById('xp-label').textContent = `${state.xp} XP total — ${pct}% pro próximo nível`;
+  document.getElementById('stat-level').textContent = lvl.level;
+}
+
+function getCurrentLevel() {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (state.xp >= LEVEL_THRESHOLDS[LEVELS[i].level]) return LEVELS[i];
+  }
+  return LEVELS[0];
+}
+function getNextLevel() {
+  const cur = getCurrentLevel();
+  return LEVELS.find(l => l.level === cur.level + 1) || null;
+}
+
+function renderBadgesRow() {
+  const row = document.getElementById('badges-row');
+  row.innerHTML = BADGE_DEFS.map(b => {
+    const unlocked = state.badgesUnlocked[b.cat];
+    return `<div class="badge ${unlocked ? 'unlocked ' + b.cat : ''}">${b.emoji} ${b.name.split(' ')[0]}</div>`;
+  }).join('');
+}
+
+let carouselIndex = { fitness: 0, social: 0, creative: 0, explore: 0, wellbeing: 0 };
+
+function renderCategories() {
+  const area = document.getElementById('categories-area');
+  area.innerHTML = CATEGORIES.map(c => {
+    const quests = state.dailyQuests[c.cat] || [];
+    const completed = state.completedToday[c.cat] || [false, false, false];
+    const idx = carouselIndex[c.cat] || 0;
+    return `
+    <div class="category-block" id="block-${c.cat}">
+      <div class="category-header">
+        <div class="category-title"><span class="category-emoji cat-${c.cat}-bg">${c.emoji}</span>${c.label}</div>
+        <button class="regen-btn" id="regen-${c.cat}" onclick="regenerateCategory('${c.cat}')"><span class="regen-ic">🔄</span> Gerar novas</button>
+      </div>
+      <div class="quest-carousel">
+        <button class="carousel-arrow" onclick="moveCarousel('${c.cat}', -1)" ${idx === 0 ? 'disabled' : ''}>‹</button>
+        <div class="carousel-viewport">
+          <div class="carousel-track" id="track-${c.cat}" style="transform: translateX(${-idx * 100}%)">
+            ${quests.map((q, i) => `
+              <div class="carousel-slide">
+                <div class="quest-card ${completed[i] ? 'completed' : ''}" onclick="${completed[i] ? '' : `openPhotoModal('${c.cat}', ${i})`}">
+                  <div class="quest-body">
+                    <div class="quest-title">${q.emoji} ${q.title}</div>
+                    <div class="quest-desc">${q.desc}</div>
+                    <div class="quest-meta">
+                      <span class="quest-xp">+${q.xp} XP</span>
+                      <span class="quest-diff diff-${q.diff}">${DIFF_LABEL[q.diff]}</span>
+                      ${!completed[i] ? `<span class="quest-camera-hint">📸 toque pra concluir</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <button class="carousel-arrow" onclick="moveCarousel('${c.cat}', 1)" ${idx >= quests.length - 1 ? 'disabled' : ''}>›</button>
+      </div>
+      <div class="carousel-dots">
+        ${quests.map((q, i) => `<div class="carousel-dot ${completed[i] ? 'done' : ''} ${i === idx ? 'active' : ''}"></div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function moveCarousel(cat, dir) {
+  const max = (state.dailyQuests[cat] || []).length - 1;
+  let next = (carouselIndex[cat] || 0) + dir;
+  next = Math.max(0, Math.min(max, next));
+  carouselIndex[cat] = next;
+  renderCategories();
+}
+
+function renderStats() {
+  document.getElementById('stat-total').textContent = state.totalCompleted;
+  document.getElementById('stat-xp').textContent = state.totalXP;
+  document.getElementById('stat-streak').textContent = state.bestStreak;
+}
+
+function renderBadgesGrid() {
+  const grid = document.getElementById('badges-grid');
+  grid.innerHTML = BADGE_DEFS.map(b => {
+    const unlocked = state.badgesUnlocked[b.cat];
+    const count = state.badges[b.cat] || 0;
+    return `
+    <div class="badge-box ${unlocked ? '' : 'locked'}">
+      <div class="badge-emoji">${b.emoji}</div>
+      <div>
+        <div class="badge-name">${b.name}</div>
+        <div class="badge-req">${unlocked ? '✅ Desbloqueado' : `${count}/${b.threshold} missões`}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!state.history.length) {
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">Complete missões para ver seu histórico aqui 🗂️</div>`;
+    return;
+  }
+  const byDate = {};
+  state.history.forEach(h => {
+    if (!byDate[h.date]) byDate[h.date] = [];
+    byDate[h.date].push(h);
+  });
+  list.innerHTML = Object.keys(byDate).reverse().map(date => `
+    <div class="history-day">
+      <div class="history-date">${date}</div>
+      ${byDate[date].map(h => `
+        <div class="history-quest">
+          <span class="history-icon">${h.emoji}</span>
+          <span class="history-name">${h.title}</span>
+          <span class="history-xp">+${h.xp} XP</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function openPhotoModal(cat, idx) {
+  const quest = state.dailyQuests[cat][idx];
+  pendingQuest = { cat, idx, quest };
+  pendingPhotoDataUrl = null;
+
+  document.getElementById('photo-modal-title').textContent = quest.emoji + ' ' + quest.title;
+  document.getElementById('photo-modal-sub').textContent = 'Tire ou envie uma foto pra confirmar que você fez essa missão';
+  document.getElementById('photo-upload-zone').style.display = 'block';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('photo-input').value = '';
+  document.getElementById('confirm-quest-btn').disabled = true;
+  document.getElementById('photo-modal').classList.add('open');
+}
+
+function closePhotoModal() {
+  document.getElementById('photo-modal').classList.remove('open');
+  pendingQuest = null;
+  pendingPhotoDataUrl = null;
+}
+
+function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingPhotoDataUrl = e.target.result;
+    document.getElementById('photo-preview-img').src = pendingPhotoDataUrl;
+    document.getElementById('photo-upload-zone').style.display = 'none';
+    document.getElementById('photo-preview-wrap').style.display = 'block';
+    document.getElementById('confirm-quest-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function retakePhoto() {
+  pendingPhotoDataUrl = null;
+  document.getElementById('photo-upload-zone').style.display = 'block';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('confirm-quest-btn').disabled = true;
+  document.getElementById('photo-input').value = '';
+}
+
+function confirmQuestCompletion() {
+  if (!pendingQuest || !pendingPhotoDataUrl) return;
+  const { cat, idx, quest } = pendingQuest;
+
+  state.completedToday[cat][idx] = true;
+  state.xp += quest.xp;
+  state.totalXP += quest.xp;
+  state.totalCompleted += 1;
+  state.badges[cat] = (state.badges[cat] || 0) + 1;
+
+  const badgeDef = BADGE_DEFS.find(b => b.cat === cat);
+  let badgeMsg = null;
+  if (badgeDef && !state.badgesUnlocked[cat] && state.badges[cat] >= badgeDef.threshold) {
+    state.badgesUnlocked[cat] = true;
+    badgeMsg = `🏅 Badge desbloqueado: ${badgeDef.name}!`;
+  }
+
+  const totalDoneBefore = Object.values(state.completedToday).reduce((sum, arr) => sum + arr.filter(Boolean).length, 0);
+  if (totalDoneBefore === 1) {
+    state.streak += 1;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  }
+
+  const today = new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+  state.history.push({ date: today, title: quest.title, xp: quest.xp, emoji: quest.emoji });
+
+  saveState();
+  closePhotoModal();
+
+  // Auto-advance to next quest in this category if not last
+  const catQuests = state.dailyQuests[cat] || [];
+  if (idx < catQuests.length - 1) {
+    carouselIndex[cat] = idx + 1;
+  }
+
+  render();
+  showToast(badgeMsg || `+${quest.xp} XP conquistado! 📸✨`);
+}
+
+function openShare() {
+  const lvl = getCurrentLevel();
+  let doneCount = 0;
+  Object.values(state.completedToday).forEach(arr => arr.forEach(v => { if (v) doneCount++; }));
+  const unlockedBadges = BADGE_DEFS.filter(b => state.badgesUnlocked[b.cat]).map(b => b.emoji).join(' ');
+
+  const text = `⚔️ SideQuest Life — Meu progresso\n\n` +
+    `🧙 ${state.name} — Nível ${lvl.level} ${lvl.name}\n` +
+    `✨ ${state.totalXP} XP total\n` +
+    `🔥 ${state.streak} dias seguidos\n` +
+    `✅ ${state.totalCompleted} missões completas\n` +
+    (unlockedBadges ? `🏅 Badges: ${unlockedBadges}\n` : '') +
+    `\nHoje: ${doneCount}/15 missões feitas\n\n` +
+    `Jogue também → sidequest.life`;
+
+  document.getElementById('share-text').textContent = text;
+  document.getElementById('share-modal').classList.add('open');
+}
+function closeShare(e) { if (e.target === document.getElementById('share-modal')) closeShareModal(); }
+function closeShareModal() { document.getElementById('share-modal').classList.remove('open'); }
+function copyShare() {
+  const text = document.getElementById('share-text').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copiado! ✅')).catch(() => showToast('Selecione e copie o texto manualmente'));
+}
+
+function switchPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (page === 'banco') renderMySuggestions();
+  if (page === 'admin' && isAdmin) renderAdminPanel();
+}
+function updateName(val) {
+  state.name = val || 'Aventureiro';
+  document.getElementById('player-name-display').textContent = state.name;
+  saveState();
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============ SUGGEST ============
+function setSuggestCat(cat, btn) {
+  suggestCat = cat;
+  document.querySelectorAll('#suggest-cats .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setSuggestDiff(diff, btn) {
+  suggestDiff = diff;
+  document.querySelectorAll('#suggest-diffs .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function submitSuggestion() {
+  const title = document.getElementById('suggest-title').value.trim();
+  const desc = document.getElementById('suggest-desc').value.trim();
+  const emoji = document.getElementById('suggest-emoji').value.trim() || '⭐';
+  if (!suggestCat) { showToast('Escolha uma categoria!'); return; }
+  if (!suggestDiff) { showToast('Escolha uma dificuldade!'); return; }
+  if (!title) { showToast('Escreve o título da missão!'); return; }
+  if (!desc) { showToast('Escreve uma descrição!'); return; }
+
+  const suggestion = {
+    id: Date.now(),
+    title, desc, emoji,
+    cat: suggestCat,
+    diff: suggestDiff,
+    status: 'pending',
+    submitter: state.name,
+    createdAt: new Date().toLocaleDateString('pt-BR')
+  };
+
+  const pending = await loadPending();
+  pending.push(suggestion);
+  await savePending(pending);
+
+  // Clear form
+  document.getElementById('suggest-title').value = '';
+  document.getElementById('suggest-desc').value = '';
+  document.getElementById('suggest-emoji').value = '';
+  suggestCat = null; suggestDiff = null;
+  document.querySelectorAll('#suggest-cats .filter-chip, #suggest-diffs .filter-chip').forEach(b => b.classList.remove('active'));
+
+  showToast('Sugestão enviada! 🙌 Aguardando aprovação.');
+  renderMySuggestions();
+}
+
+async function renderMySuggestions() {
+  const list = document.getElementById('my-suggestions-list');
+  if (!list) return;
+  const pending = await loadPending();
+  const approved = await loadSharedBank();
+  const myName = state.name;
+
+  const mine = [
+    ...pending.filter(q => q.submitter === myName).map(q => ({ ...q, status: 'pending' })),
+    ...approved.filter(q => q.submitter === myName).map(q => ({ ...q, status: 'approved' })),
+  ].sort((a, b) => b.id - a.id);
+
+  if (!mine.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Você ainda não sugeriu nenhuma missão.</div>';
+    return;
+  }
+  list.innerHTML = mine.map(q => `
+    <div class="suggestion-card">
+      <div class="suggestion-card-title">${q.emoji} ${q.title}</div>
+      <div class="suggestion-card-desc">${q.desc}</div>
+      <div class="suggestion-card-meta">
+        <span class="quest-diff diff-${q.diff}">${DIFF_LABEL[q.diff]}</span>
+        <span class="suggestion-status status-${q.status}">${q.status === 'pending' ? '⏳ Pendente' : '✅ Aprovada'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ============ ADMIN ============
+function openAdminLogin() {
+  document.getElementById('admin-pass-input').value = '';
+  document.getElementById('admin-pass-error').style.display = 'none';
+  document.getElementById('admin-modal').classList.add('open');
+}
+function closeAdminModal(e) {
+  if (e.target === document.getElementById('admin-modal')) document.getElementById('admin-modal').classList.remove('open');
+}
+function tryAdminLogin() {
+  const pass = document.getElementById('admin-pass-input').value;
+  if (pass === ADMIN_PASSWORD) {
+    isAdmin = true;
+    document.getElementById('admin-modal').classList.remove('open');
+    switchPage('admin', document.getElementById('nav-profile'));
+    renderAdminPanel();
+  } else {
+    document.getElementById('admin-pass-error').style.display = 'block';
+  }
+}
+function adminLogout() {
+  isAdmin = false;
+  switchPage('home', document.getElementById('nav-home'));
+}
+
+async function renderAdminPanel() {
+  const pending = await loadPending();
+  const approved = await loadSharedBank();
+
+  // Pending list
+  const pendingEl = document.getElementById('admin-pending-list');
+  if (!pending.length) {
+    pendingEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">Nenhuma sugestão pendente. 🎉</div>';
+  } else {
+    pendingEl.innerHTML = pending.map(q => `
+      <div class="suggestion-card" id="pcard-${q.id}">
+        <div class="suggestion-card-title">${q.emoji} ${q.title}</div>
+        <div class="suggestion-card-desc">${q.desc}</div>
+        <div class="suggestion-card-meta">
+          <span class="quest-diff diff-${q.diff}">${DIFF_LABEL[q.diff]}</span>
+          <span class="badge unlocked ${q.cat}">${CATEGORIES.find(c=>c.cat===q.cat)?.emoji} ${q.cat}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto;">por ${q.submitter}</span>
+        </div>
+        <div class="admin-btns">
+          <button class="admin-btn approve" onclick="approveQuest(${q.id})">✅ Aprovar</button>
+          <button class="admin-btn reject" onclick="rejectQuest(${q.id})">❌ Rejeitar</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // Approved list
+  const approvedEl = document.getElementById('admin-approved-list');
+  document.getElementById('approved-count').textContent = `(${approved.length})`;
+  if (!approved.length) {
+    approvedEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Nenhuma missão aprovada ainda.</div>';
+  } else {
+    approvedEl.innerHTML = approved.map(q => `
+      <div class="suggestion-card">
+        <div class="suggestion-card-title">${q.emoji} ${q.title}</div>
+        <div class="suggestion-card-desc">${q.desc}</div>
+        <div class="suggestion-card-meta">
+          <span class="quest-diff diff-${q.diff}">${DIFF_LABEL[q.diff]}</span>
+          <span class="badge unlocked ${q.cat}">${CATEGORIES.find(c=>c.cat===q.cat)?.emoji} ${q.cat}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto;">por ${q.submitter || '?'}</span>
+          <button class="admin-btn remove" onclick="removeApproved(${q.id})">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+async function approveQuest(id) {
+  let pending = await loadPending();
+  const quest = pending.find(q => q.id === id);
+  if (!quest) return;
+  pending = pending.filter(q => q.id !== id);
+  await savePending(pending);
+  const approved = await loadSharedBank();
+  approved.push({ ...quest, status: 'approved' });
+  await saveApproved(approved);
+  showToast('Missão aprovada! ✅');
+  renderAdminPanel();
+}
+
+async function rejectQuest(id) {
+  let pending = await loadPending();
+  pending = pending.filter(q => q.id !== id);
+  await savePending(pending);
+  showToast('Sugestão rejeitada.');
+  renderAdminPanel();
+}
+
+async function removeApproved(id) {
+  let approved = await loadSharedBank();
+  approved = approved.filter(q => q.id !== id);
+  await saveApproved(approved);
+  showToast('Removida do banco.');
+  renderAdminPanel();
+}
+
+loadState();
+</script>
+</body>
+</html>
